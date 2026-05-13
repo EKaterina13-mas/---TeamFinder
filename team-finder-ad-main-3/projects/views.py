@@ -1,3 +1,4 @@
+import json
 from http import HTTPStatus
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
@@ -102,33 +103,75 @@ class ProjectSkillAddView(View):
     @transaction.atomic
     def post(self, request, project_id):
         project = get_object_or_404(Project, id=project_id)
-        
+
         if project.owner != request.user:
-            return JsonResponse({'error': 'Permission denied'}, status=HTTPStatus.FORBIDDEN)
-        
-        skill_id = request.POST.get('skill_id')
-        skill_name = request.POST.get('name')
-        
+            return JsonResponse(
+                {'error': 'Permission denied'},
+                status=HTTPStatus.FORBIDDEN
+            )
+
+        data = {}
+
+        # если данные пришли как обычная форма
+        if request.POST:
+            data.update(request.POST.dict())
+
+        # если данные пришли как JSON
+        if request.body:
+            try:
+                body_data = json.loads(request.body.decode('utf-8'))
+                if isinstance(body_data, dict):
+                    data.update(body_data)
+            except json.JSONDecodeError:
+                pass
+
+        print("ADD SKILL DATA:", data)
+
+        skill_id = data.get('skill_id') or data.get('id')
+
+        skill_name = (
+            data.get('name')
+            or data.get('skill_name')
+            or data.get('skillName')
+            or data.get('text')
+            or data.get('value')
+            or data.get('label')
+            or ''
+        )
+
+        if isinstance(skill_name, str):
+            skill_name = skill_name.strip()
+
         created = False
         added = False
         skill = None
-        
+
         if skill_id:
             skill = get_object_or_404(Skill, id=skill_id)
+
         elif skill_name:
             skill, created = Skill.objects.get_or_create(name=skill_name)
-        
-        if skill:
-            if not project.skills.filter(id=skill.id).exists():
-                project.skills.add(skill)
-                added = True
-            else:
-                added = False
-        
+
+        if not skill:
+            return JsonResponse(
+                {
+                    'error': 'Skill not provided',
+                    'received_data': data,
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+
+        if not project.skills.filter(id=skill.id).exists():
+            project.skills.add(skill)
+            added = True
+
         return JsonResponse({
-            'skill_id': skill.id if skill else None,
+            'id': skill.id,
+            'skill_id': skill.id,
+            'name': skill.name,
+            'skill_name': skill.name,
             'created': created,
-            'added': added
+            'added': added,
         })
 
 
