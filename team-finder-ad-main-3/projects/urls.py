@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     ProjectListView, ProjectDetailView, ProjectCreateView,
     ProjectUpdateView, skills_autocomplete, ProjectSkillAddView,
-    ProjectSkillRemoveView,
+    ProjectSkillRemoveView, ProjectToggleParticipateView, ProjectCompleteView,
 )
 
 urlpatterns = [
@@ -14,4 +14,6 @@ urlpatterns = [
     path('skills/', skills_autocomplete, name='skills_autocomplete'),
     path('<int:project_id>/skills/add/', ProjectSkillAddView.as_view(), name='project_skill_add'),
     path('<int:project_id>/skills/<int:skill_id>/remove/', ProjectSkillRemoveView.as_view(), name='project_skill_remove'),
+    path('<int:project_id>/toggle-participate/', ProjectToggleParticipateView.as_view(), name='project_toggle_participate'),
+    path('<int:project_id>/complete/', ProjectCompleteView.as_view(), name='project_complete'),
 ]

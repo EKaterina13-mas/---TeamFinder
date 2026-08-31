@@ -176,6 +176,48 @@ class ProjectSkillAddView(View):
 
 
 @method_decorator(login_required, name='dispatch')
+class ProjectToggleParticipateView(View):
+    def post(self, request, project_id):
+        project = get_object_or_404(Project, id=project_id)
+
+        if project.owner_id == request.user.id:
+            return JsonResponse(
+                {'error': 'Owner cannot toggle participation'},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        if project.participants.filter(id=request.user.id).exists():
+            project.participants.remove(request.user)
+            is_participant = False
+        else:
+            project.participants.add(request.user)
+            is_participant = True
+
+        return JsonResponse({
+            'status': 'ok',
+            'participant': is_participant,
+            'participants_count': project.participants.count(),
+        })
+
+
+@method_decorator(login_required, name='dispatch')
+class ProjectCompleteView(View):
+    def post(self, request, project_id):
+        project = get_object_or_404(Project, id=project_id)
+
+        if project.owner_id != request.user.id:
+            return JsonResponse(
+                {'error': 'Permission denied'},
+                status=HTTPStatus.FORBIDDEN,
+            )
+
+        project.status = 'closed'
+        project.save(update_fields=['status'])
+
+        return JsonResponse({'status': 'ok', 'project_status': project.status})
+
+
+@method_decorator(login_required, name='dispatch')
 class ProjectSkillRemoveView(View):
     def post(self, request, project_id, skill_id):
         project = get_object_or_404(Project, id=project_id)

@@ -102,6 +102,28 @@ python manage.py runserver
 
 Теперь проект доступен по адресу [http://localhost:8000](http://localhost:8000). 
 Если видите ракету с надписью "The install worked successfully! Congratulations!", то запуск прошёл успешно, Django работает!
-Осталось всего ничего: реализовать весь проект!
+
+## 5. Тестовые данные для ревьюера
+
+Чтобы в базе сразу были тестовые пользователи и проекты (с навыками), выполните:
+
+```bash
+python manage.py seed_demo_data
+```
+
+Команда создаст 3 тестовых пользователей (email: `anna@example.com`, `boris@example.com`, `kate@example.com`, пароль у всех: `demo-password-123`) и по одному проекту у каждого с проставленными навыками.
+
+## 6. Деплой на Render (продакшен)
+
+Проект настроен для деплоя на [Render.com](https://render.com):
+
+- `build.sh` — команда сборки (установка зависимостей, сбор статики, миграции).
+- `gunicorn` — production WSGI-сервер (команда запуска: `gunicorn team_finder.wsgi`).
+- `whitenoise` — раздаёт статические файлы без отдельного CDN.
+- `dj-database-url` — разбирает переменную `DATABASE_URL`, которую Render выдаёт для managed PostgreSQL.
+
+Необходимые переменные окружения на Render: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=False`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, `DATABASE_URL` (создаётся автоматически при подключении Render Postgres), `TASK_VERSION=3`.
+
+После первого деплоя тестовые данные создаются командой `python manage.py seed_demo_data` через Render Shell.
 
 Если в процессе разработки способ развертывания приложения поменяется, обновите `readme.md` с пометкой ревьюеру, как запускать и проверять приложение.
