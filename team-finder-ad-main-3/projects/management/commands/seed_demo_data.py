@@ -3,6 +3,7 @@ from django.db import transaction
 
 from projects.models import Project, Skill
 from users.models import User
+from users.utils import generate_avatar
 
 
 DEMO_USERS = [
@@ -87,6 +88,12 @@ class Command(BaseCommand):
                 user.set_password(DEFAULT_PASSWORD)
                 user.save()
                 self.stdout.write(self.style.SUCCESS(f"Создан пользователь {user.email}"))
+            elif not user.avatar or not user.avatar.storage.exists(user.avatar.name):
+                # Файл аватарки мог пропасть после передеплоя (Render на бесплатном
+                # тарифе не хранит диск постоянно) — пересоздаём картинку.
+                user.avatar = generate_avatar(user.name)
+                user.save(update_fields=["avatar"])
+                self.stdout.write(self.style.WARNING(f"Восстановлена аватарка для {user.email}"))
             users_by_email[data["email"]] = user
 
         for data in DEMO_PROJECTS:
