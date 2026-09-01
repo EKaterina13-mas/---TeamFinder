@@ -11,5 +11,7 @@ urlpatterns = [
     path("projects/", include("projects.urls")),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Для крупного продакшена аватарки лучше хранить в облаке (S3 и т.п.),
+# но для учебного демо-проекта с невысокой нагрузкой отдаём их прямо
+# через Django и в DEBUG=False тоже — иначе картинки не будут видны на сайте.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
